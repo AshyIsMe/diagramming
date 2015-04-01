@@ -3,8 +3,10 @@
 
 name:                diagramming
 version:             0.1.0.0
--- synopsis:            
--- description:         
+synopsis:            A simple app to quickly start drawing with code. 
+description:         
+  processing.org is simple and fun to start drawing with code.
+  Why not haskell too?
 license:             MIT
 license-file:        LICENSE
 author:              Aaron Ash
@@ -20,5 +22,8 @@ executable diagramming
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7
+                     , cabal-macosx
+                     , wx
+                     , wxcore
   -- hs-source-dirs:      
   default-language:    Haskell2010
