@@ -11,5 +11,6 @@ guiApps = [MacApp "diagramming"
                   Nothing   -- Default Info.plist
                   []        -- No other resources
                   []        -- No other binaries
-                  DoNotChase
+                  {-DoNotChase-}
+                  ChaseWithDefaults
           ]
