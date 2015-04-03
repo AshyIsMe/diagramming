@@ -1,48 +1,54 @@
-{--------------------------------------------------------------------------------
-  The 'hello world' demo from the wxWindows site.
---------------------------------------------------------------------------------}
 module Main where
 
-import Graphics.UI.WXCore
+import           Codec.Picture
+import qualified Diagrams.Prelude as D
+import qualified Diagrams.Backend.Rasterific as DR
+import           Graphics.UI.WX
+import           Graphics.UI.WXCore.WxcTypes
+import qualified Data.ByteString.Lazy as B
 
+main :: IO ()
 main
-  = run helloWorld
+  = start hello
 
-helloWorld
-  = do -- create file menu
-       fm <- menuCreate "" 0
-       menuAppend fm wxID_ABOUT "&About.." "About wxHaskell" False {- not checkable -}
-       menuAppendSeparator fm
-       menuAppend fm wxID_EXIT "&Quit\tCtrl-Q"    "Quit the demo"  False
+hello :: IO ()
+hello = do 
+  f         <- frame [text := "Hello!"]
+  editor    <- textCtrl f [wrap := WrapNone]
+  p         <- panel f [on paint := paintBalls]
+  runButton <- button f [text := "Run", on command := run editor]
+  quit      <- button f [text := "Quit", on command := close f]
+  set f [layout := minsize (sz 400 300) $
+                   margin 10 (column 5 [fill $ floatCentre (widget p)
+                                      ,fill $ floatCentre (widget editor)
+                                      ,floatCentre (widget runButton)
+                                      ,floatCentre (widget quit)
+                                      ])]
 
-       -- create menu bar
-       m  <- menuBarCreate 0
-       menuBarAppend m fm "&File"
+run :: Textual w => w -> IO ()
+run e = do
+  t <- get e text
+  putStrLn t
 
-       -- create top frame
-       f  <- frameCreate objectNull idAny "Hello world" rectZero frameDefaultStyle
-       windowSetBackgroundColour f white
-       windowSetClientSize f (sz 600 250)
+ball :: Bitmap ()
+ball = bitmap "ball.bmp"
 
-       -- set status bar with 1 field
-       frameCreateStatusBar f 1 0
-       frameSetStatusText f "Welcome to wxHaskell" 0
 
-       -- connect menu
-       frameSetMenuBar f m
-       evtHandlerOnMenuCommand f wxID_ABOUT (onAbout f)
-       evtHandlerOnMenuCommand f wxID_EXIT  (onQuit f)
+paintBalls :: DC a -> Rect -> IO ()
+paintBalls  dc viewArea
+  = do set dc [brushColor := red, brushKind := BrushSolid]
+       drawBitmap dc ball (Point 10 10) True []
+       drawBitmap dc ball (Point 20 20) True []
+       drawBitmap dc ball (Point 30 30) True []
+       testcircle <- imageCreateFromPixels (Size 50 50) testcircle
+       drawImage dc testcircle (Point 50 30) []
 
-       -- show it
-       windowShow f
-       windowRaise f
-       return ()
-  where
-    onAbout f
-      = do version <- versionNumber
-           messageDialog f "About 'Hello World'" ("This is a wxHaskell " ++ show version ++ " sample") (wxOK + wxICON_INFORMATION)
-           return ()
-
-    onQuit f
-      = do windowClose f True {- force close -}
-           return ()
+c :: D.Diagram DR.B D.R2
+c = D.circle 4
+testimage :: Image PixelRGBA8
+testimage = D.renderDia DR.Rasterific (DR.RasterificOptions (D.Width 50)) c
+testbitmap :: B.ByteString
+testbitmap = encodeBitmap testimage
+{-testcircle :: IO (Graphics.UI.WXCore.WxcClassTypes.Image ())-}
+{-testcircle = imageCreateFromPixels (Size 50 50) $ (map (Color . fromIntegral) $ B.unpack testbitmap)-}
+testcircle = (map (Color . fromIntegral) $ B.unpack testbitmap)

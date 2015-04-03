@@ -22,7 +22,12 @@ executable diagramming
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7
+                     , bytestring
                      , cabal-macosx
+                     , diagrams
+                     , diagrams-lib
+                     , diagrams-rasterific
+                     , JuicyPixels
                      , wx
                      , wxcore
   -- hs-source-dirs:      
