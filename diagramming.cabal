@@ -29,6 +29,7 @@ executable diagramming
                      , diagrams-rasterific
                      , JuicyPixels
                      , split
+                     , vector
                      , wx
                      , wxcore
   -- hs-source-dirs:      
