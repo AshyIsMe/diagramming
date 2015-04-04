@@ -8,8 +8,11 @@ import           Graphics.UI.WXCore.WxcTypes
 import qualified Data.ByteString.Lazy as B
 
 main :: IO ()
-main
-  = start hello
+main = do
+  {-writeBitmap "circle.bmp" testimage-}
+  saveBmpImage "circle.bmp" $ ImageRGBA8 testimage
+  savePngImage "circle.png" $ ImageRGBA8 testimage
+  start hello
 
 hello :: IO ()
 hello = do 
@@ -33,22 +36,42 @@ run e = do
 ball :: Bitmap ()
 ball = bitmap "ball.bmp"
 
+{-circlepng :: Graphics.UI.WXCore.WxcClassTypes.Image ()-}
+circlepng = image "circle.png"
 
 paintBalls :: DC a -> Rect -> IO ()
 paintBalls  dc viewArea
   = do set dc [brushColor := red, brushKind := BrushSolid]
-       drawBitmap dc ball (Point 10 10) True []
-       drawBitmap dc ball (Point 20 20) True []
-       drawBitmap dc ball (Point 30 30) True []
-       testcircle <- imageCreateFromPixels (Size 50 50) testcircle
-       drawImage dc testcircle (Point 50 30) []
+       {-drawBitmap dc ball (Point 10 10) True []-}
+       {-drawBitmap dc ball (Point 20 20) True []-}
+       {-drawBitmap dc ball (Point 30 30) True []-}
+       {-testcircle <- imageCreateFromPixels (Size 50 50) testcircle-}
+       testcircle <- imageCreateFromPixels (Size 50 50) $ renderToWxImage testimage
+       drawImage dc testcircle (Point 0 0) []
+       drawImage dc circlepng (Point 100 0) []
 
 c :: D.Diagram DR.B D.R2
-c = D.circle 4
+c = D.circle 1 # D.fc D.green
 testimage :: Image PixelRGBA8
 testimage = D.renderDia DR.Rasterific (DR.RasterificOptions (D.Width 50)) c
-testbitmap :: B.ByteString
-testbitmap = encodeBitmap testimage
-{-testcircle :: IO (Graphics.UI.WXCore.WxcClassTypes.Image ())-}
-{-testcircle = imageCreateFromPixels (Size 50 50) $ (map (Color . fromIntegral) $ B.unpack testbitmap)-}
-testcircle = (map (Color . fromIntegral) $ B.unpack testbitmap)
+testbitmap :: Either String B.ByteString
+testbitmap = encodeDynamicBitmap $ ImageRGBA8 testimage
+testcircle :: [Color]
+testcircle = case testbitmap of
+  Right bs -> byteStringToColorList bs
+  Left e -> error e
+
+byteStringToColorList :: B.ByteString -> [Color]
+byteStringToColorList bs = _byteStringToColorList $ B.unpack bs
+
+_byteStringToColorList :: [Word8] -> [Color]
+_byteStringToColorList (r:g:b:a:ws) = [colorRGBA r g b a] ++ _byteStringToColorList ws
+_byteStringToColorList bs = undefined
+
+renderToWxImage :: Image PixelRGBA8 -> [Color]
+renderToWxImage i = do
+  case encodeDynamicBitmap $ ImageRGBA8 i of
+    Right bs -> byteStringToColorList bs
+    Left e -> error e
+
+
