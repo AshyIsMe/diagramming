@@ -27,6 +27,7 @@ executable diagramming
                      , diagrams
                      , diagrams-lib
                      , diagrams-rasterific
+                     , hint
                      , JuicyPixels
                      , split
                      , vector
