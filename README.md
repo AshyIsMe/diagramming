@@ -2,6 +2,9 @@
 This project aims to be something similar to processing.org except using haskell.
 Something anyone can download and run to very quickly start making graphical code for fun and profit without needing to wrestle with cabal and ghc installation.
 
+## Screenshot
+![Screenshot](screenshot.png)
+
 ## Building
 ```bash
   # Install wxWidgets: 
