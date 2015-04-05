@@ -54,7 +54,7 @@ run e = do
   putStrLn t
   r <- H.runInterpreter $ diagramInterpreter t
   case r of
-    Left e -> do renderWindow $ (D.text ("Error Bitches: " ++ show e) # D.fc D.red)
+    Left e -> do renderWindow $ (D.text (show e) # D.fc D.red)
     Right is -> do putStrLn "Running diagram"
                    renderWindow is
 
