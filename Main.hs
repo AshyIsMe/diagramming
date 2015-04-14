@@ -3,6 +3,7 @@
 
 module Main where
 import           Codec.Picture
+import qualified Control.Monad.State as S
 import           Data.List.Split (chunksOf)
 import qualified Data.Vector.Storable as V (toList)
 import           Data.Bits
@@ -17,7 +18,13 @@ import qualified Language.Haskell.Interpreter as H
 deriving instance Typeable D.Any
 
 exampleDiagram :: String
-exampleDiagram = "circle 0.5 # fc red `atop` circle 1 # fc green `atop` square 2 :: Diagram B R2"
+{-exampleDiagram = "circle 0.5 # fc yellow `atop` circle 1 # fc green `atop` square 2 :: Diagram B R2"-}
+exampleDiagram = "beside (r2 (1,1)) (circle 1 # fc yellow) (square 2 # fc green) :: Diagram B R2"
+
+
+animateDiagram :: String
+{-testCode = "(+) 42 :: Integer -> Integer"-}
+animateDiagram = "blah :: State (Double, Double) (Diagram B R2) -> State (Double, Double) (Diagram B R2)"
 
 main :: IO ()
 main = do
@@ -25,15 +32,47 @@ main = do
 
 mainWindow :: IO ()
 mainWindow = do 
-  f         <- frame [text := "Hello!"]
-  editor    <- textCtrl f [wrap := WrapNone, text := exampleDiagram]
-  runButton <- button f [text := "Run", on command := run editor]
-  quit      <- button f [text := "Quit", on command := close f]
+  f              <- frame [text := "Hello!"]
+  editor         <- textCtrl f [wrap := WrapNone, text := exampleDiagram]
+  runButton      <- button f [text := "Run", on command := run editor]
+  animatedEditor <- textCtrl f [wrap := WrapNone, text := animateDiagram]
+  runTestButton  <- button f [text := "Run animation test", on command := runTest animatedEditor]
+  quit           <- button f [text := "Quit", on command := close f]
   set f [layout := minsize (sz 640 480) $
                    margin 10 (column 5 [fill $ floatCentre (widget editor)
                                       ,(row 2 [floatCentre (widget runButton)
                                               ,floatCentre (widget quit)])
+                                      ,fill $ floatCentre (widget animatedEditor)
+                                      ,floatCentre (widget runTestButton)
                                       ])]
+
+runTest :: Textual w => w -> IO ()
+runTest e = do
+  t <- get e text
+  putStrLn t
+  renderAnimation
+
+renderAnimation :: IO ()
+renderAnimation = do
+  vNum <- varCreate 0.1
+  f <- frame [text := "testing window"]
+  p <- panel f [on paint := paintAnimation vNum]
+  t <- timer f [interval := 20, on command := nextNum vNum p]
+  set f [layout := minsize (sz 640 480) $
+                   fill (widget p)]
+
+paintAnimation :: Var Double -> DC a -> Rect -> IO ()
+paintAnimation vNum dc r = do
+  num <- varGet vNum
+  dia <- imageCreateFromPixels (Size (rectWidth r) (rectHeight r)) $
+            let d = D.beside (D.r2 (num,1)) (D.circle 1 D.# D.fc D.yellow) (D.square 2 D.# D.fc D.green) :: D.Diagram DR.B D.R2
+            in renderDiagram d (rectWidth r) (rectHeight r)
+  drawImage dc dia (Point 0 0) []
+
+nextNum :: Var Double -> Panel () -> IO ()
+nextNum vNum p = do
+  varUpdate vNum (+ 0.1)
+  repaint p
 
 renderWindow :: (D.Diagram DR.B D.R2) -> IO ()
 renderWindow d = do
