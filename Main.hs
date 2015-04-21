@@ -9,6 +9,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Storable as V (toList)
 import           Data.Bits
 import qualified Diagrams.Prelude as D
+import qualified Diagrams.TwoD.Vector as D
 import qualified Diagrams.Backend.Rasterific as DR
 import           Graphics.UI.WX
 import           Graphics.UI.WXCore.WxcTypes
@@ -67,7 +68,8 @@ paintAnimation :: Var Double -> DC a -> Rect -> IO ()
 paintAnimation vNum dc r = do
   num <- varGet vNum
   dia <- imageCreateFromPixels (Size (rectWidth r) (rectHeight r)) $
-            let d = D.beside (D.r2 (num,1)) (D.circle 1 D.# D.fc D.yellow) (D.circle 1 D.# D.fc D.green) :: D.Diagram DR.B D.R2
+            {-let d = D.beside (D.r2 (num,1)) (D.circle 1 D.# D.fc D.yellow) (D.circle 1 D.# D.fc D.green) :: D.Diagram DR.B D.R2-}
+            let d = D.beside (D.e (num D.@@ D.rad)) (D.circle 1 D.# D.fc D.yellow) (D.circle 1 D.# D.fc D.green) :: D.Diagram DR.B D.R2
             in renderDiagram d (rectWidth r) (rectHeight r)
   drawImage dc dia (Point 0 0) []
 
@@ -102,9 +104,11 @@ run e = do
 
 diagramInterpreter :: String -> H.Interpreter (D.Diagram DR.B D.R2)
 diagramInterpreter diagramhaskell = do
-  H.setImportsQ [("Prelude", Nothing), ("Diagrams.Prelude", Nothing), ("Diagrams.Backend.Rasterific", Nothing)]
+  H.setImportsQ [("Prelude", Nothing), 
+                 ("Diagrams.Prelude", Nothing), 
+                 ("Diagrams.TwoD.Vector", Nothing), 
+                 ("Diagrams.Backend.Rasterific", Nothing)]
   H.interpret diagramhaskell (H.as :: D.QDiagram DR.B D.R2 D.Any)
-
 
 renderDiagram :: D.Diagram DR.B D.R2 -> Int -> Int -> [Color]
 renderDiagram d w h = 
