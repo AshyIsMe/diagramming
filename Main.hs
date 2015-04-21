@@ -20,34 +20,31 @@ import qualified Language.Haskell.Interpreter as H
 deriving instance Typeable D.Any
 
 --AA TODO: Sort out a way to pass state between invocations of the update() function the user defines
-type DiagramState = S.State (Map.Map String Double) (D.Diagram DR.B D.R2)
+{-type DiagramState = S.State (Map.Map String Double) (D.Diagram DR.B D.R2)-}
 
 exampleDiagram :: String
-{-exampleDiagram = "circle 0.5 # fc yellow `atop` circle 1 # fc green `atop` square 2 :: Diagram B R2"-}
-{-exampleDiagram = "beside (r2 (1,1)) (circle 1 # fc yellow) (square 2 # fc green) :: Diagram B R2"-}
-exampleDiagram = "beside (e (10 @@ rad)) (circle 1 # fc yellow) (square 2 # fc green) :: Diagram B R2"
-
-
-animateDiagram :: String
-{-animateDiagram = "blah :: State (Double, Double) (Diagram B R2) -> State (Double, Double) (Diagram B R2)"-}
-animateDiagram = "(\\num -> beside (e (num @@ rad)) (circle 1 # fc yellow) (square 2 # fc green)) :: Double -> Diagram B R2"
+{-exampleDiagram = "(\\num -> beside (e (num @@ rad)) (circle 1 # fc yellow) (square 2 # fc green)) :: Double -> Diagram B R2"-}
+exampleDiagram = unlines ["-- Uncomment the line below for a simple Diagram",
+                          "-- beside (e (10 @@ rad)) (circle 1 # fc yellow) (circle 2 # fc green) :: Diagram B R2",
+                          "-- Otherwise the following will be run each frame passing in a Double that is incremented by 0.01 each time",
+                          "(\\num -> beside (e (num @@ rad)) (circle 1 # fc yellow) (circle 1 # fc green)) :: Double -> Diagram B R2"]
 
 main :: IO ()
 main = start mainWindow
 
 mainWindow :: IO ()
 mainWindow = do 
-  f              <- frame [text := "Hello!"]
-  editor         <- textCtrl f [wrap := WrapNone, text := exampleDiagram]
-  runButton      <- button f [text := "Run", on command := run editor]
-  animatedEditor <- textCtrl f [wrap := WrapNone, text := animateDiagram]
-  runTestButton  <- button f [text := "Run animation test", on command := runTest animatedEditor]
-  quit           <- button f [text := "Quit", on command := close f]
+  f             <- frame [text := "Hello!"]
+  editor        <- textCtrl f [wrap := WrapNone, text := exampleDiagram]
+  runButton     <- button f [text := "Run static diagram", on command := run editor]
+  runTestButton <- button f [text := "Run animated diagram", on command := runTest editor]
+  quit          <- button f [text := "Quit", on command := close f]
   set f [layout := minsize (sz 640 480) $
-                   margin 10 (column 5 [fill $ floatCentre (widget editor)
-                                      ,row 2 [floatCentre (widget runButton) ,floatCentre (widget quit)]
-                                      ,fill $ floatCentre (widget animatedEditor)
-                                      ,floatCentre (widget runTestButton)
+                   margin 10 (column 5 [--fill $ floatCentre (widget editor),
+                                        fill $ floatCentre (widget editor)
+                                        ,row 3 [floatCentre (widget runTestButton)
+                                                ,floatCentre (widget runButton)
+                                                ,floatCentre (widget quit)]
                                       ])]
 
 runTest :: Textual w => w -> IO ()
