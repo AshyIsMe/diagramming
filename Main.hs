@@ -24,12 +24,13 @@ type DiagramState = S.State (Map.Map String Double) (D.Diagram DR.B D.R2)
 
 exampleDiagram :: String
 {-exampleDiagram = "circle 0.5 # fc yellow `atop` circle 1 # fc green `atop` square 2 :: Diagram B R2"-}
-exampleDiagram = "beside (r2 (1,1)) (circle 1 # fc yellow) (square 2 # fc green) :: Diagram B R2"
+{-exampleDiagram = "beside (r2 (1,1)) (circle 1 # fc yellow) (square 2 # fc green) :: Diagram B R2"-}
+exampleDiagram = "beside (e (10 @@ rad)) (circle 1 # fc yellow) (square 2 # fc green) :: Diagram B R2"
 
 
 animateDiagram :: String
-{-testCode = "(+) 42 :: Integer -> Integer"-}
-animateDiagram = "blah :: State (Double, Double) (Diagram B R2) -> State (Double, Double) (Diagram B R2)"
+{-animateDiagram = "blah :: State (Double, Double) (Diagram B R2) -> State (Double, Double) (Diagram B R2)"-}
+animateDiagram = "(\\num -> beside (e (num @@ rad)) (circle 1 # fc yellow) (square 2 # fc green)) :: Double -> Diagram B R2"
 
 main :: IO ()
 main = start mainWindow
@@ -53,23 +54,29 @@ runTest :: Textual w => w -> IO ()
 runTest e = do
   t <- get e text
   putStrLn t
-  renderAnimation
+  r <- H.runInterpreter $ animatedDiagramInterpreter t
+  case r of
+    Left e -> do print e
+                 renderWindow (D.text (show e) # D.fc D.red)
+    Right is -> do putStrLn "Running diagram"
+                   renderAnimation is 
 
-renderAnimation :: IO ()
-renderAnimation = do
+renderAnimation :: (Double -> D.Diagram DR.B D.R2) -> IO ()
+renderAnimation fun = do
   vNum <- varCreate 0.1
   f <- frame [text := "testing window"]
-  p <- panel f [on paint := paintAnimation vNum]
+  p <- panel f [on paint := paintAnimation vNum fun]
   t <- timer f [interval := 60, on command := nextNum vNum p]
   set f [layout := minsize (sz 640 480) $
                    fill (widget p)]
 
-paintAnimation :: Var Double -> DC a -> Rect -> IO ()
-paintAnimation vNum dc r = do
+paintAnimation :: Var Double -> (Double -> D.Diagram DR.B D.R2) -> DC a -> Rect -> IO ()
+paintAnimation vNum f dc r = do
   num <- varGet vNum
   dia <- imageCreateFromPixels (Size (rectWidth r) (rectHeight r)) $
             {-let d = D.beside (D.r2 (num,1)) (D.circle 1 D.# D.fc D.yellow) (D.circle 1 D.# D.fc D.green) :: D.Diagram DR.B D.R2-}
-            let d = D.beside (D.e (num D.@@ D.rad)) (D.circle 1 D.# D.fc D.yellow) (D.circle 1 D.# D.fc D.green) :: D.Diagram DR.B D.R2
+            {-let d = D.beside (D.e (num D.@@ D.rad)) (D.circle 1 D.# D.fc D.yellow) (D.circle 1 D.# D.fc D.green) :: D.Diagram DR.B D.R2-}
+            let d = f num
             in renderDiagram d (rectWidth r) (rectHeight r)
   drawImage dc dia (Point 0 0) []
 
@@ -109,6 +116,15 @@ diagramInterpreter diagramhaskell = do
                  ("Diagrams.TwoD.Vector", Nothing), 
                  ("Diagrams.Backend.Rasterific", Nothing)]
   H.interpret diagramhaskell (H.as :: D.QDiagram DR.B D.R2 D.Any)
+
+animatedDiagramInterpreter :: String -> H.Interpreter (Double -> D.Diagram DR.B D.R2)
+animatedDiagramInterpreter diagramhaskell = do
+  H.setImportsQ [("Prelude", Nothing), 
+                 ("Diagrams.Prelude", Nothing), 
+                 ("Diagrams.TwoD.Vector", Nothing), 
+                 ("Diagrams.Backend.Rasterific", Nothing)]
+  H.interpret diagramhaskell (H.as :: Double -> D.QDiagram DR.B D.R2 D.Any)
+
 
 renderDiagram :: D.Diagram DR.B D.R2 -> Int -> Int -> [Color]
 renderDiagram d w h = 
