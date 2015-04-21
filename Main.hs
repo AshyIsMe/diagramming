@@ -42,9 +42,9 @@ mainWindow = do
   set f [layout := minsize (sz 640 480) $
                    margin 10 (column 5 [--fill $ floatCentre (widget editor),
                                         fill $ floatCentre (widget editor)
-                                        ,row 3 [floatCentre (widget runTestButton)
-                                                ,floatCentre (widget runButton)
-                                                ,floatCentre (widget quit)]
+                                        ,hstretch $ row 3 [floatCentre (widget runTestButton)
+                                                          ,floatCentre (widget runButton)
+                                                          ,floatCentre (widget quit)]
                                       ])]
 
 runTest :: Textual w => w -> IO ()
