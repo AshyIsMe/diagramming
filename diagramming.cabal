@@ -24,6 +24,7 @@ executable diagramming
   build-depends:       base 
                      , bytestring
                      , cabal-macosx
+                     , containers
                      , diagrams
                      , diagrams-lib
                      , diagrams-rasterific
